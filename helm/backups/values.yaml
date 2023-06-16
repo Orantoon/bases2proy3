@@ -14,6 +14,7 @@ mongo:
     diskSize: 2
     storageClass: hostpath
     provider: Azure
+    type: backup
 
 postgresql:
   enabled: false
@@ -31,7 +32,7 @@ postgresql:
     diskSize: 2
     storageClass: hostpath
     provider: Azure
-
+    type: backup
 
 azure:
   storageAccount: backupsp3bd2
@@ -55,6 +56,7 @@ mariadb:
     diskSize: 2
     storageClass: hostpath
     provider: Azure
+    type: backup
 
 elasticsearch:
   enabled: false
@@ -72,6 +74,7 @@ elasticsearch:
     diskSize: 2
     storageClass: hostpath
     provider: Azure
+    type: backup
 
 neo4j:
   enabled: false
@@ -89,6 +92,7 @@ neo4j:
     diskSize: 2
     storageClass: hostpath
     provider: Azure
+    type: backup
 
 couchdb:
   enabled: false
@@ -106,3 +110,4 @@ couchdb:
     diskSize: 2
     storageClass: hostpath
     provider: Azure
+    type: backup
