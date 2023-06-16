@@ -34,12 +34,6 @@ postgresql:
     provider: Azure
     type: backup
 
-azure:
-  storageAccount: backupsp3bd2
-  container: bckup
-  azureSecret: azure-storage-account-key
-  provider: Azure
-
 mariadb:
   enabled: false
   config:
@@ -94,3 +88,10 @@ couchdb:
     storageClass: hostpath
     provider: Azure
     type: backup
+
+
+azure:
+  storageAccount: backupsp3bd2
+  container: bckup
+  azureSecret: azure-storage-account-key
+  provider: Azure
