@@ -6,4 +6,4 @@ spec:
   version: {{ .Values.kibana.version }}
   count: {{ .Values.kibana.replicas }}
   elasticsearchRef:
-    name: {{ .Values.kibana.name }}
+    name: {{ .Values.kibana.name }} #referencia al clúster de Elasticsearch que desea respaldar
