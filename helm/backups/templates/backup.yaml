@@ -1,5 +1,7 @@
-#Mongo
+# ===== MongoDB ===== 
+
 {{- if .Values.mongo.enabled}}
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -138,10 +140,11 @@ spec:
             # - "/dev/null"
       restartPolicy: Never
   backoffLimit: 1
+
 {{- end}}
 
 
-#Postgres
+# ===== PostgreSQL ===== 
 
 {{- if .Values.postgresql.enabled }}
 
@@ -286,3 +289,10 @@ spec:
 
 {{- end }}
 
+# ===== CouchDB ===== 
+
+# ===== MariaDB =====
+
+# ===== Elasticsearch ===== 
+
+# ===== Neo4J ===== 
