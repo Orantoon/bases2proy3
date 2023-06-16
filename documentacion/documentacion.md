@@ -6,6 +6,37 @@
 
 ## **Guía de instalación y uso del proyecto**
 
+Es necesario tener Docker Desktop instalado en el equipo, y Kubernetes habilitado en Docker Dektop. También se debe tener Helm instalado, y un entorno de línea de comandos, como la Termional o PowerShell.
+
+Para verificar que efectivamente sí se pueda acceder a Kubernetes, esto se puede revisar ejecutando el comando "kubectl version", el cual debería mostrar la información de la versión de Kubernetes instalada.
+
+Para cada uno de los motores de bases de datos mencionados (MariaDB, PostgreSQL, Elasticsearch, MongoDB, Neo4J, CouchDB), instala los Helm Charts correspondientes utilizando el comando helm install y proporcionando los valores de configuración adecuados. Por ejemplo, para instalar MariaDB, se puede ejecutar el comando:
+
+"helm install mariadb ./charts/mariadb --set database rootPassword=<ROOT_PASSWORD>"
+
+Donde <ROOT_PASSWORD> es la contraseña raíz que deseas configurar para MariaDB. Repite este paso para los demás motores de bases de datos, ajustando los comandos y valores según corresponda.
+
+Para la instalación de las bases de datos, también se puede utilizar el archivo "instalacion.sh", como se comenta más adelante en este documento.
+
+También es necesario configurar los Helm Charts de los backups. Para esto accede al directorio helm/backups en el proyecto. Edita el archivo values.yaml para especificar las configuraciones necesarias para crear/restaurar los backups de cada base de datos. 
+
+Proporciona los valores de configuración para namespace, connectionString, storageAccount, container, path, maxBackups, azureSecret, name, schedule, diskSize, storageClass, provider y type según tus necesidades. Asegúrate de configurar los valores correspondientes a cada motor de base de datos. Puede ajustar otras configuraciones como el nombre del Chart, recursos de Kubernetes, etc., según se necesite.
+
+Posteriormente, se debe instalar el Helm Chart para backups. Desde el director helm/backups, ejecute el siguiente comando para instalar el Chart de backups:
+
+"helm install backups ."
+
+Esto creará los recursos de Kubernetes necesarios para realizar los backups y restauraciones.
+
+Por último, es importante verificar que los pods, servicios y otros recursos de Kubernetes se hayan creado correctamente ejecutando comandos como "kubectl get pods", "kubectl get services", etc.
+
+Como instrucciones adicionales, utilice herramientas como telnet, curl o Postman para interactuar con las bases de datos que exponen una API y verifique que estén funcionando correctamente.
+
+Configure los CronJobs o Jobs de Kubernetes según lo especificado en el Helm Chart de backups para que se ejecuten automáticamente y realicen los backups según el cronograma establecido.
+
+Puede monitorear los backups realizados y verificar que se almacenen correctamente en Azure, y opcionalmente, implementar la funcionalidad de retener un número configurable de copias de seguridad más recientes.
+
+Para restaurar un backup, modifica la configuración del Helm Chart de backups con la información del backup específico que deseas restaurar y ejecuta el comando "helm upgrade" para aplicar los cambios.
 ### Tecnologías Implementadas
 
 - Docker
@@ -52,3 +83,11 @@ Con esto ya se instalan las bases de datos para todas estas tecnologías. Ademá
 10. Para poder realizar el proyecto es indispensable que al menos un miembro del grupo tenga un equipo que pueda utilizar Docker sin problemas.
 
 ## **Referencias bibliográficas**
+
+Create custom images | Elastic Cloud on Kubernetes [2.8] | Elastic. (n.d.). Elastic. https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-custom-images.html 
+
+Official Elastic Community. (2021, June 24). Snapshot & Restore - Daily Elastic Byte S02E14 [Video]. YouTube. https://www.youtube.com/watch?v=hc6V-1aR33E 
+
+Register a snapshot repository | Elasticsearch Guide [8.8] | Elastic. (n.d.). Elastic. https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshots-register-repository.html 
+
+Singh, A. K. (2021, December 15). Snapshot using Azure Repository Plugin in Elasticsearch(ECK) ! Medium. https://arunksingh16.medium.com/snapshot-using-azure-repository-plugin-in-elasticsearch-eck-81584b48836a
