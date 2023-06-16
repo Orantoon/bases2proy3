@@ -58,23 +58,6 @@ mariadb:
     provider: Azure
     type: backup
 
-elasticsearch:
-  enabled: false
-  config:
-    namespace: default
-    connectionString: databases-elasticsearch.default.svc.cluster.local:9200
-    storageAccount: backupsp3bd2
-    container: bckup
-    path: /elasticsearch
-    maxBackups: 3
-    azureSecret: azure-storage-account-key
-    secret: databases-elasticsearch
-    name: elasticsearch
-    schedule: "0 */12 * * *"
-    diskSize: 2
-    storageClass: hostpath
-    provider: Azure
-    type: backup
 
 neo4j:
   enabled: false
