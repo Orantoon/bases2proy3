@@ -38,3 +38,71 @@ azure:
   container: bckup
   azureSecret: azure-storage-account-key
   provider: Azure
+
+mariadb:
+  enabled: false
+  config:
+    namespace: default
+    connectionString: databases-mariadb.default.svc.cluster.local:3306
+    storageAccount: backupsp3bd2
+    container: bckup
+    path: /mariadb
+    maxBackups: 3
+    azureSecret: azure-storage-account-key
+    secret: databases-mariadb
+    name: mariadb
+    schedule: "0 */12 * * *"
+    diskSize: 2
+    storageClass: hostpath
+    provider: Azure
+
+elasticsearch:
+  enabled: false
+  config:
+    namespace: default
+    connectionString: databases-elasticsearch.default.svc.cluster.local:9200
+    storageAccount: backupsp3bd2
+    container: bckup
+    path: /elasticsearch
+    maxBackups: 3
+    azureSecret: azure-storage-account-key
+    secret: databases-elasticsearch
+    name: elasticsearch
+    schedule: "0 */12 * * *"
+    diskSize: 2
+    storageClass: hostpath
+    provider: Azure
+
+neo4j:
+  enabled: false
+  config:
+    namespace: default
+    connectionString: databases-neo4j.default.svc.cluster.local:7687
+    storageAccount: backupsp3bd2
+    container: bckup
+    path: /neo4j
+    maxBackups: 3
+    azureSecret: azure-storage-account-key
+    secret: databases-neo4j
+    name: neo4j
+    schedule: "0 */12 * * *"
+    diskSize: 2
+    storageClass: hostpath
+    provider: Azure
+
+couchdb:
+  enabled: false
+  config:
+    namespace: default
+    connectionString: databases-couchdb.default.svc.cluster.local:5984
+    storageAccount: backupsp3bd2
+    container: bckup
+    path: /couchdb
+    maxBackups: 3
+    azureSecret: azure-storage-account-key
+    secret: databases-couchdb
+    name: couchdb
+    schedule: "0 */12 * * *"
+    diskSize: 2
+    storageClass: hostpath
+    provider: Azure
