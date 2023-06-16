@@ -6,8 +6,8 @@ apk upgrade
 apk add postgresql-client
 az config set extension.use_dynamic_install=yes_without_prompt
 pg_dump $PGDATABASE > /postgresqldump/$DATE/database.sql
-gzip /postgresqlbackup/$DATE/database.sql  # Compress the database dump file
-az storage blob directory upload --container $CONTAINER -s /postgresqlbackup/$DATE -d $BACKUP_PATH --auth-mode key --recursive
+gzip /postgresqldump/$DATE/database.sql  # Compress the database dump file
+az storage blob directory upload --container $CONTAINER -s /postgresqldump/$DATE -d $BACKUP_PATH --auth-mode key --recursive
 rm -rf /postgresqldump/$DATE
 
 

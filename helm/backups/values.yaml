@@ -17,13 +17,13 @@ mongo:
     type: backup
 
 postgresql:
-  enabled: false
+  enabled: true
   config:
     namespace: default
     connectionString: databases-postgresql.default.svc.cluster.local:5432
     storageAccount: backupsp3bd2
     container: bckup
-    path: /postgres
+    path: /postgresBackup
     maxBackups: 3
     azureSecret: azure-storage-account-key
     secret: databases-postgresql
@@ -72,7 +72,7 @@ neo4j:
     type: backup
 
 couchdb:
-  enabled: false
+  enabled: true
   config:
     namespace: default
     connectionString: databases-couchdb.default.svc.cluster.local:5984

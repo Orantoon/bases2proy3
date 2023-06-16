@@ -91,7 +91,7 @@ metadata:
 spec:
   template:
     spec:
-      serviceAccountName: {{ .Values.mongo.config.serviceAccount }}
+      #serviceAccountName: {{ .Values.mongo.config.serviceAccount }}
       volumes:
       - name: scripts
         configMap:
@@ -142,7 +142,6 @@ spec:
   backoffLimit: 1
 
 {{- end}}
-
 
 # ===== PostgreSQL ===== 
 
@@ -197,7 +196,7 @@ spec:
             - image: mcr.microsoft.com/azure-cli
               name: postgre-snapshotter
               env:
-                - name: POSTGRES_CONNECTION_STRING
+                - name: PGDATABASE
                   value: "{{ .Values.postgresql.config.connectionString }}"
                 - name: AZURE_STORAGE_ACCOUNT
                   value: "{{ .Values.azure.storageAccount }}"
@@ -237,7 +236,7 @@ metadata:
 spec:
   template:
     spec:
-      serviceAccountName: {{ .Values.postgresql.config.serviceAccount }}
+      #serviceAccountName: {{ .Values.postgresql.config.serviceAccount }}
       volumes:
       - name: scripts
         configMap:
@@ -250,7 +249,7 @@ spec:
         - image: mcr.microsoft.com/azure-cli
           name: postgre-snapshotter
           env:
-            - name: POSTGRES_CONNECTION_STRING
+            - name: PGDATABASE
               value: "{{ .Values.postgresql.config.connectionString }}"
             - name: AZURE_STORAGE_ACCOUNT
               value: "{{ .Values.azure.storageAccount }}"
@@ -290,6 +289,133 @@ spec:
 {{- end }}
 
 # ===== CouchDB ===== 
+
+{{- if .Values.couchdb.enabled }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: couchdb-backups-script
+  namespace: {{ .Values.namespace }}
+data:
+{{ (.Files.Glob "scripts/couchdb.sh").AsConfig | indent 2 }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: couchdb-snapshotter
+  namespace: {{ .Values.couchdb.config.namespace }}
+spec:
+  storageClassName: {{ .Values.couchdb.config.storageClass }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.couchdb.config.diskSize }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: "couchdb-backup"
+  namespace: {{ .Values.couchdb.config.namespace }}
+spec:
+  schedule: {{ .Values.couchdb.config.schedule }}
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        spec:
+          terminationGracePeriodSeconds: 0
+          restartPolicy: Never
+          volumes:
+          - name: scripts
+            configMap:
+              name: couchdb-backups-script
+              defaultMode: 0777
+          - name: couchdb-snapshotter
+            persistentVolumeClaim:
+              claimName: couchdb-snapshotter
+          containers:
+            - image: mcr.microsoft.com/azure-cli
+              name: couchdb-snapshotter
+              env:
+                - name: COUCHDB_CONNECTION_STRING
+                  value: "{{ .Values.couchdb.config.connectionString }}"
+                - name: AZURE_STORAGE_ACCOUNT
+                  value: "{{ .Values.azure.storageAccount }}"
+                - name: CONTAINER
+                  value: "{{ .Values.azure.container }}"
+                - name: BACKUP_PATH
+                  value: "{{ .Values.couchdb.config.path }}"
+                - name: MAX_BACKUPS
+                  value: "{{ .Values.couchdb.config.maxBackups }}"
+                - name: AZURE_STORAGE_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: "{{ .Values.azure.azureSecret }}"
+                      key: azure.client.default.key
+                      optional: false
+              volumeMounts:
+                - mountPath: "/couchdbdump"
+                  name: couchdb-snapshotter
+                - name: scripts
+                  mountPath: /scripts
+              command:
+                - "/scripts/couchdb.sh"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: couchdb-backup-0
+  namespace: {{ .Values.couchdb.config.namespace }}
+spec:
+  template:
+    spec:
+      #serviceAccountName: {{ .Values.couchdb.config.serviceAccount }}
+      volumes:
+      - name: scripts
+        configMap:
+          name: couchdb-backups-script
+          defaultMode: 0777
+      - name: couchdb-snapshotter
+        persistentVolumeClaim:
+          claimName: couchdb-snapshotter
+      containers:
+        - image: mcr.microsoft.com/azure-cli
+          name: couchdb-snapshotter
+          env:
+            - name: COUCHDB_CONNECTION_STRING
+              value: "{{ .Values.couchdb.config.connectionString }}"
+            - name: AZURE_STORAGE_ACCOUNT
+              value: "{{ .Values.azure.storageAccount }}"
+            - name: CONTAINER
+              value: "{{ .Values.azure.container }}"
+            - name: BACKUP_PATH
+              value: "{{ .Values.couchdb.config.path }}"
+            - name: MAX_BACKUPS
+              value: "{{ .Values.couchdb.config.maxBackups }}"
+            - name: AZURE_STORAGE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.azure.azureSecret }}"
+                  key: azure.client.default.key
+                  optional: false
+          volumeMounts:
+            - mountPath: "/couchdbdump"
+              name: couchdb-snapshotter
+            - name: scripts
+              mountPath: /scripts
+          command:
+            - "/scripts/couchdb.sh"
+            # - "tail"
+            # - "-f"
+            # - "/dev/null"
+      restartPolicy: Never
+  backoffLimit: 1
+
+{{- end }}
 
 # ===== MariaDB =====
 
