@@ -6,7 +6,20 @@
 
 ## **Guía de instalación y uso del proyecto**
 
+### Tecnologías Implementadas
+
 - Docker
+- MariaDB
+- PostgreSQL
+- Elasticsearch
+- MongoDB
+- Neo4J
+- CouchDB
+- Azure
+ 
+
+Lo primero que se debe hacer es correr el archivo llamado *instalacion. sh* en la carpeta "bash" para empezar a crear los realeases de Docker de manera automatizada. En este archivo lo que se hace es correr los helm charts de las carpetas "bootstrap", "databases" y "backups". Con esto ya se instalan las bases de datos para todas estas tecnologías. Además en la carpeta "backups" se encuentra un archivo llamado *values.yaml*, en el que se definen configuraciones de los backups que se realizan de las bases de datos. El nombre del Blob en Azure donde se guardan los backups dentro del Azure Storage Account es "bckup". 
+
 
 ## **Pruebas y sus pasos para reproducirlas**
 
