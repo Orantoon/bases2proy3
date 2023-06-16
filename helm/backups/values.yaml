@@ -1,0 +1,40 @@
+mongo:
+  enabled: true
+  config:
+    namespace: default
+    connectionString: databases-mongodb.default.svc.cluster.local:27017
+    storageAccount: backupsp3bd2
+    container: bckup
+    path: /mongoBackup
+    maxBackups: 3
+    azureSecret: azure-storage-account-key
+    secret: databases-mongodb
+    name: mongo
+    schedule: "0 */12 * * *"
+    diskSize: 2
+    storageClass: hostpath
+    provider: Azure
+
+postgresql:
+  enabled: false
+  config:
+    namespace: default
+    connectionString: databases-postgresql.default.svc.cluster.local:5432
+    storageAccount: backupsp3bd2
+    container: bckup
+    path: /postgres
+    maxBackups: 3
+    azureSecret: azure-storage-account-key
+    secret: databases-postgresql
+    name: postgresql
+    schedule: "0 */12 * * *"
+    diskSize: 2
+    storageClass: hostpath
+    provider: Azure
+
+
+azure:
+  storageAccount: backupsp3bd2
+  container: bckup
+  azureSecret: azure-storage-account-key
+  provider: Azure

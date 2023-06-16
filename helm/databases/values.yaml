@@ -1,0 +1,33 @@
+mongodb:
+  enabled: true
+
+mariaDB:
+  enabled: true
+
+postgresql:
+  enabled: true
+
+neo4j:
+  neo4j:  
+    name: my-neo4j
+  volumes:
+    data:
+      mode: defaultStorageClass
+  enabled: true
+  
+  
+
+couchdb:
+  enabled: true
+  couchdbConfig:
+   couchdb:
+    uuid: decafbaddecafbaddecafbaddecafbad # Unique identifier for this CouchDB server instance    
+    
+elastic:
+  version: 8.6.1
+  replicas: 1
+  name: ic4302
+kibana:
+  version: 8.6.1
+  replicas: 1
+  name: ic4302

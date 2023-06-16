@@ -1,0 +1,288 @@
+#Mongo
+{{- if .Values.mongo.enabled}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-backups-script
+  namespace: {{ .Values.namespace }}
+data:
+{{ (.Files.Glob "scripts/mongodb.sh").AsConfig | indent 2 }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-snapshotter
+  namespace: {{ .Values.mongo.config.namespace }}
+spec:
+  storageClassName: {{ .Values.mongo.config.storageClass }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.mongo.config.diskSize }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: "mongo-backup"
+  namespace: {{ .Values.mongo.config.namespace }}
+spec:
+  schedule: {{ .Values.mongo.config.schedule }}
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        spec:
+          terminationGracePeriodSeconds: 0
+          restartPolicy: Never
+          volumes:
+          - name: scripts
+            configMap:
+              name: mongo-backups-script
+              defaultMode: 0777
+          - name: mongo-snapshotter
+            persistentVolumeClaim:
+              claimName: mongo-snapshotter
+          containers:
+            - image: mcr.microsoft.com/azure-cli
+              name: mongo-snapshotter
+              env:
+                - name: MONGO_CONNECTION_STRING
+                  value: "{{ .Values.mongo.config.connectionString }}"
+                - name: AZURE_STORAGE_ACCOUNT
+                  value: "{{ .Values.mongo.config.storageAccount }}"
+                - name: CONTAINER
+                  value: "{{ .Values.azure.container }}"
+                - name: BACKUP_PATH
+                  value: "{{ .Values.mongo.config.path }}"
+                - name: MAX_BACKUPS
+                  value: "{{ .Values.mongo.config.maxBackups }}"
+                - name: MONGO_USERNAME
+                  value: "root"
+                - name: MONGO_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: "{{ .Values.mongo.config.secret }}"
+                      key: mongodb-root-password
+                      optional: false
+                - name: AZURE_STORAGE_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: "{{.Values.azure.azureSecret }}"
+                      key: azure.client.default.key
+                      optional: false
+              volumeMounts:
+                - mountPath: "/mongodump"
+                  name: mongo-snapshotter
+                - name: scripts
+                  mountPath: /scripts
+              command:
+                - "/scripts/mongodb.sh"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongo-backup-0
+  namespace: {{ .Values.mongo.config.namespace }}
+spec:
+  template:
+    spec:
+      serviceAccountName: {{ .Values.mongo.config.serviceAccount }}
+      volumes:
+      - name: scripts
+        configMap:
+          name: mongo-backups-script
+          defaultMode: 0777
+      - name: mongo-snapshotter
+        persistentVolumeClaim:
+          claimName: mongo-snapshotter
+      containers:
+        - image: mcr.microsoft.com/azure-cli
+          name: mongo-snapshotter
+          env:
+            - name: MONGO_CONNECTION_STRING
+              value: "{{ .Values.mongo.config.connectionString }}"
+            - name: AZURE_STORAGE_ACCOUNT
+              value: "{{ .Values.mongo.config.storageAccount }}"
+            - name: CONTAINER
+              value: "{{ .Values.azure.container }}"
+            - name: BACKUP_PATH
+              value: "{{ .Values.mongo.config.path }}"
+            - name: MAX_BACKUPS
+              value: "{{ .Values.mongo.config.maxBackups }}"
+            - name: MONGO_USERNAME
+              value: "root"
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.mongo.config.secret }}"
+                  key: mongodb-root-password
+                  optional: false
+            - name: AZURE_STORAGE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: "{{.Values.azure.azureSecret }}"
+                  key: azure.client.default.key
+                  optional: false
+          volumeMounts:
+            - mountPath: "/mongodump"
+              name: mongo-snapshotter
+            - name: scripts
+              mountPath: /scripts
+          command:
+            - "/scripts/mongodb.sh"
+            # - "tail"
+            # - "-f"
+            # - "/dev/null"
+      restartPolicy: Never
+  backoffLimit: 1
+{{- end}}
+
+
+#Postgres
+
+{{- if .Values.postgresql.enabled }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgre-backups-script
+  namespace: {{ .Values.namespace }}
+data:
+{{ (.Files.Glob "scripts/postgresql.sh").AsConfig | indent 2 }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgre-snapshotter
+  namespace: {{ .Values.postgresql.config.namespace }}
+spec:
+  storageClassName: {{ .Values.postgresql.config.storageClass }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.postgresql.config.diskSize }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: "postgre-backup"
+  namespace: {{ .Values.postgresql.config.namespace }}
+spec:
+  schedule: {{ .Values.postgresql.config.schedule }}
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        spec:
+          terminationGracePeriodSeconds: 0
+          restartPolicy: Never
+          volumes:
+          - name: scripts
+            configMap:
+              name: postgre-backups-script
+              defaultMode: 0777
+          - name: postgre-snapshotter
+            persistentVolumeClaim:
+              claimName: postgre-snapshotter
+          containers:
+            - image: mcr.microsoft.com/azure-cli
+              name: postgre-snapshotter
+              env:
+                - name: POSTGRES_CONNECTION_STRING
+                  value: "{{ .Values.postgresql.config.connectionString }}"
+                - name: AZURE_STORAGE_ACCOUNT
+                  value: "{{ .Values.azure.storageAccount }}"
+                - name: CONTAINER
+                  value: "{{ .Values.azure.container }}"
+                - name: BACKUP_PATH
+                  value: "{{ .Values.postgresql.config.path }}"
+                - name: MAX_BACKUPS
+                  value: "{{ .Values.postgresql.config.maxBackups }}"
+                - name: POSTGRES_USERNAME
+                  value: "root"
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: "{{ .Values.postgresql.config.secret }}"
+                      key: postgres-password
+                      optional: false
+                - name: AZURE_STORAGE_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: "{{ .Values.azure.azureSecret }}"
+                      key: azure.client.default.key
+                      optional: false
+              volumeMounts:
+                - mountPath: "/postgredump"
+                  name: postgre-snapshotter
+                - name: scripts
+                  mountPath: /scripts
+              command:
+                - "/scripts/postgresql.sh"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgre-backup-0
+  namespace: {{ .Values.postgresql.config.namespace }}
+spec:
+  template:
+    spec:
+      serviceAccountName: {{ .Values.postgresql.config.serviceAccount }}
+      volumes:
+      - name: scripts
+        configMap:
+          name: postgre-backups-script
+          defaultMode: 0777
+      - name: postgre-snapshotter
+        persistentVolumeClaim:
+          claimName: postgre-snapshotter
+      containers:
+        - image: mcr.microsoft.com/azure-cli
+          name: postgre-snapshotter
+          env:
+            - name: POSTGRES_CONNECTION_STRING
+              value: "{{ .Values.postgresql.config.connectionString }}"
+            - name: AZURE_STORAGE_ACCOUNT
+              value: "{{ .Values.azure.storageAccount }}"
+            - name: CONTAINER
+              value: "{{ .Values.azure.container }}"
+            - name: BACKUP_PATH
+              value: "{{ .Values.postgresql.config.path }}"
+            - name: MAX_BACKUPS
+              value: "{{ .Values.postgresql.config.maxBackups }}"
+            - name: POSTGRES_USERNAME
+              value: "root"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.postgresql.config.secret }}"
+                  key: postgres-password
+                  optional: false
+            - name: AZURE_STORAGE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.azure.azureSecret }}"
+                  key: azure.client.default.key
+                  optional: false
+          volumeMounts:
+            - mountPath: "/postgredump"
+              name: postgre-snapshotter
+            - name: scripts
+              mountPath: /scripts
+          command:
+            - "/scripts/postgresql.sh"
+            # - "tail"
+            # - "-f"
+            # - "/dev/null"
+      restartPolicy: Never
+  backoffLimit: 1
+
+{{- end }}
+
